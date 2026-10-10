@@ -1,23 +1,63 @@
 <template>
-  <div class="min-h-screen bg-[#F1EFE8]">
-    <header class="border-b border-[#D3D1C7] bg-white flex items-center justify-between px-6 py-3">
-      <span class="font-medium">资源中心</span>
-      <div class="text-sm text-[#5F5E5A] flex items-center gap-4">
-        <router-link v-if="adminEntry" to="/admin/users" class="hover:text-[#0C447C]">后台</router-link>
-        <button class="hover:text-[#0C447C]" @click="logout">退出</button>
+  <div class="min-h-screen bg-ink-50">
+    <!-- 顶栏 -->
+    <header class="sticky top-0 z-10 bg-white border-b border-ink-200">
+      <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+        <div class="flex items-center gap-2.5">
+          <span class="w-8 h-8 rounded-lg bg-brand-600 flex items-center justify-center text-white">
+            <AppIcon name="logo" class="w-5 h-5" />
+          </span>
+          <span class="font-semibold text-ink-900">Admin Scaffold</span>
+        </div>
+        <nav class="hidden md:flex items-center gap-7 text-sm text-ink-500">
+          <a class="hover:text-ink-900 cursor-pointer transition">首页</a>
+          <a class="hover:text-ink-900 cursor-pointer transition">资源</a>
+          <a class="hover:text-ink-900 cursor-pointer transition">文档</a>
+        </nav>
+        <div class="flex items-center gap-3">
+          <AppButton v-if="adminEntry" variant="secondary" size="sm" @click="goAdmin">进入后台</AppButton>
+          <button class="text-sm text-ink-500 hover:text-ink-900 transition" @click="logout">退出</button>
+        </div>
       </div>
     </header>
 
-    <section class="bg-brand-50 px-6 py-10">
-      <h1 class="text-lg font-medium mb-2">一站式资源自助平台</h1>
-      <p class="text-sm text-[#5F5E5A] mb-4">浏览、申请、管理你需要的资源，全程自助。</p>
-      <button class="bg-brand-600 text-white rounded-md px-4 py-2 text-sm">立即浏览</button>
+    <!-- Hero -->
+    <section class="border-b border-ink-200 bg-white">
+      <div class="max-w-6xl mx-auto px-6 pt-20 pb-16 text-center">
+        <span class="inline-flex items-center gap-1.5 rounded-full bg-brand-50 text-brand-700 text-xs px-3 py-1 font-medium">
+          ✦ 开源 · Vue 3 + Express + SQLite
+        </span>
+        <h1 class="mt-5 text-4xl md:text-5xl font-bold tracking-tight text-ink-900">一站式资源自助平台</h1>
+        <p class="mt-4 text-base text-ink-500 max-w-xl mx-auto leading-relaxed">
+          浏览、申请、管理你需要的资源，全程自助。基于可插拔的资源类型注册表，按业务自由扩展。
+        </p>
+        <div class="mt-8 flex items-center justify-center gap-3">
+          <AppButton @click="browse">立即浏览</AppButton>
+          <AppButton v-if="adminEntry" variant="secondary" @click="goAdmin">管理后台</AppButton>
+        </div>
+      </div>
     </section>
 
-    <section class="p-6 grid grid-cols-2 md:grid-cols-4 gap-3">
-      <div v-for="r in resources" :key="r" class="border border-[#D3D1C7] rounded-lg p-3 bg-white">
-        <p class="text-sm font-medium">资源占位</p>
-        <p class="text-xs text-[#5F5E5A] mt-1">按业务替换：{{ r }}</p>
+    <!-- 资源网格 -->
+    <section class="max-w-6xl mx-auto px-6 py-16">
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div
+          v-for="r in resources"
+          :key="r"
+          class="group bg-white rounded-xl border border-ink-200 p-5 shadow-card hover:border-brand-200 hover:-translate-y-0.5 transition-all duration-200"
+        >
+          <span class="w-10 h-10 rounded-lg bg-brand-50 text-brand-600 flex items-center justify-center">
+            <AppIcon name="logo" class="w-5 h-5" />
+          </span>
+          <p class="mt-3 font-medium text-ink-900 text-sm">{{ r }}</p>
+          <p class="text-xs text-ink-500 mt-1">按业务替换此卡片</p>
+        </div>
+        <div
+          v-if="!resources.length"
+          class="col-span-full text-center text-ink-500 text-sm py-10 bg-white rounded-xl border border-dashed border-ink-300"
+        >
+          暂无资源类型，请在后端 <code class="px-1.5 py-0.5 rounded bg-ink-100">resource-types.js</code> 注册。
+        </div>
       </div>
     </section>
   </div>
@@ -25,10 +65,14 @@
 
 <script setup>
 import { ref, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
 import { api } from '../lib/apiBase';
 import { usePermissions } from '../composables/usePermissions';
+import AppIcon from '../components/ui/AppIcon.vue';
+import AppButton from '../components/ui/AppButton.vue';
 
 const { adminEntry, logout } = usePermissions();
+const router = useRouter();
 const resources = ref([]);
 
 onMounted(async () => {
@@ -39,4 +83,11 @@ onMounted(async () => {
     resources.value = [];
   }
 });
+
+function goAdmin() {
+  router.push('/admin/users');
+}
+function browse() {
+  document.querySelector('section:last-of-type')?.scrollIntoView({ behavior: 'smooth' });
+}
 </script>

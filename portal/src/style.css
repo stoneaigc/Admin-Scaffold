@@ -3,11 +3,55 @@
 @tailwind utilities;
 
 :root {
-  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
-  color: #2C2C2A;
+  color: #0f172a;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
 }
 
 body {
-  margin: 0;
-  background: #F1EFE8;
+  background: #f8fafc;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* 精致滚动条 */
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+*::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* 模态过渡 */
+.modal-fade-enter-active,
+.modal-fade-leave-active {
+  transition: opacity 0.2s ease;
+}
+.modal-fade-enter-from,
+.modal-fade-leave-to {
+  opacity: 0;
+}
+
+/* 表单控件统一基线 */
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+input::placeholder,
+select::placeholder {
+  color: #94a3b8;
 }
