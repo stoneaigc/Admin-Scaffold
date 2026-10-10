@@ -1,0 +1,50 @@
+services:
+  server:
+    build: ./server
+    restart: unless-stopped
+    environment:
+      PORT: 3000
+      # 默认 SQLite：开箱即跑，数据落在挂载卷 ./data/app.db
+      DB_TYPE: sqlite
+      SQLITE_PATH: /app/server/data/app.db
+      JWT_SECRET: ${JWT_SECRET:-change-me-to-a-random-secret}
+      TOKEN_TTL: ${TOKEN_TTL:-86400}
+      SEED_ADMIN_USERNAME: ${SEED_ADMIN_USERNAME:-admin}
+      SEED_ADMIN_PASSWORD: ${SEED_ADMIN_PASSWORD:-admin123456}
+      SEED_ADMIN_NAME: ${SEED_ADMIN_NAME:-超级管理员}
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./data:/app/server/data   # SQLite 文件持久化
+
+  # 前端（可选）：本地开发用 `cd portal && npm run dev`；生产可用下面这个 nginx 构建
+  # frontend:
+  #   build: ./portal
+  #   restart: unless-stopped
+  #   depends_on:
+  #     - server
+  #   ports:
+  #     - "8080:80"
+
+  # ===== 生产可选：改用 PostgreSQL =====
+  # 取消注释下面两段，并把上面 server.environment 里的 DB_TYPE 改为 postgres、删掉 SQLITE_PATH。
+  # postgres:
+  #   image: postgres:16-alpine
+  #   restart: unless-stopped
+  #   environment:
+  #     POSTGRES_USER: ${PG_USER:-postgres}
+  #     POSTGRES_PASSWORD: ${PG_PASSWORD:-postgres}
+  #     POSTGRES_DB: ${PG_DATABASE:-admin_scaffold}
+  #   volumes:
+  #     - pgdata:/var/lib/postgresql/data
+  # server 的 environment 改为：
+  #   DB_TYPE: postgres
+  #   PG_HOST: postgres
+  #   PG_PORT: 5432
+  #   PG_USER: ${PG_USER:-postgres}
+  #   PG_PASSWORD: ${PG_PASSWORD:-postgres}
+  #   PG_DATABASE: ${PG_DATABASE:-admin_scaffold}
+  # 并给 server 加 depends_on: [postgres]
+
+# volumes:
+#   pgdata:
