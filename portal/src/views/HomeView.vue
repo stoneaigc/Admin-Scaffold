@@ -49,14 +49,14 @@
           <span class="w-10 h-10 rounded-lg bg-brand-50 text-brand-600 flex items-center justify-center">
             <AppIcon name="logo" class="w-5 h-5" />
           </span>
-          <p class="mt-3 font-medium text-ink-900 text-sm">{{ r }}</p>
-          <p class="text-xs text-ink-500 mt-1">按业务替换此卡片</p>
+          <p class="mt-3 font-medium text-ink-900 text-sm">{{ r.name }}</p>
+          <p class="text-xs text-ink-500 mt-1 font-mono">{{ r.key }}</p>
         </div>
         <div
           v-if="!resources.length"
           class="col-span-full text-center text-ink-500 text-sm py-10 bg-white rounded-xl border border-dashed border-ink-300"
         >
-          暂无资源类型，请在后端 <code class="px-1.5 py-0.5 rounded bg-ink-100">resource-types.js</code> 注册。
+          暂无资源类型，请在后端 <code class="px-1.5 py-0.5 rounded bg-ink-100">resource-types.setup.js</code> 注册。
         </div>
       </div>
     </section>
@@ -80,8 +80,7 @@ const adminMenu = computed(() => firstVisibleMenu(can));
 
 onMounted(async () => {
   try {
-    const data = await api('/api/resources');
-    resources.value = Object.keys(data);
+    resources.value = await api('/api/resource-types');
   } catch {
     resources.value = [];
   }

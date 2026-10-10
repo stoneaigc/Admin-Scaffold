@@ -4,6 +4,7 @@ require('./db'); // 初始化 global.db（统一驱动层）
 const app = require('./app');
 const { run } = require('./lib/migrator');
 const bcrypt = require('bcryptjs');
+require('./resource-types.setup'); // 注册业务资源类型（业务接入点）
 
 // 首次启动按 .env 创建初始管理员（可留空关闭）
 async function seedAdmin() {

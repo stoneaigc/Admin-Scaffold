@@ -61,9 +61,10 @@ PG_DATABASE=admin_scaffold
 │   ├── app.js             # 路由挂载
 │   ├── auth.js            # JWT + verifyUser / requirePermission 中间件
 │   ├── db.js              # 统一驱动层（默认 SQLite，DB_TYPE=postgres 切 PG）
+│   ├── resource-types.setup.js # ★ 业务接入点：在这里注册你的资源类型
 │   ├── lib/
 │   │   ├── permission.js  # 权限查询 + 资源可见性纯函数
-│   │   ├── resource-types.js # 资源类型注册表（业务接入点）
+│   │   ├── resource-types.js # 资源类型注册表的引擎实现（一般不改）
 │   │   └── migrator.js    # 按 migrations/<dialect> 顺序执行
 │   ├── routes/            # auth(登录) / rbac(用户·角色·权限·资源组) / portal(资源)
 │   └── migrations/
@@ -75,9 +76,10 @@ PG_DATABASE=admin_scaffold
 
 ## 怎么改成自己的项目
 
-1. **注册资源类型**（后端 `server/lib/resource-types.js`）
+1. **注册资源类型**（后端 `server/resource-types.setup.js`）
    每个业务对象（模型 / 文档 / 商品 …）调用 `registerResourceType({ key, name, listAll })`，
    权限引擎据此做资源组白名单可见性，前端据此渲染广场。
+   默认带 `服务` / `数据集` 两个示例，接业务时直接替换或删除。
 
 2. **加权限原子**：在 `server/migrations/<dialect>/002_rbac_seed.sql`（`sqlite` / `pg` 两套都要加）追加 `permissions` 行，
    接口用 `requirePermission('your:perm')` 守卫，前端用 `usePermissions()` 的 `can()` 控制按钮。
