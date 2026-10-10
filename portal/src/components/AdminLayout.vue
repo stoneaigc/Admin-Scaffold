@@ -10,7 +10,7 @@
       </div>
 
       <nav class="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
-        <p class="px-3 text-[11px] font-semibold uppercase tracking-wider text-ink-500 mb-2">管理</p>
+        <p v-if="menus.length" class="px-3 text-[11px] font-semibold uppercase tracking-wider text-ink-500 mb-2">管理</p>
         <router-link
           v-for="m in menus"
           v-show="!m.soon"
@@ -29,6 +29,7 @@
 
         <div
           v-for="m in menus.filter((x) => x.soon)"
+          v-show="menus.length"
           :key="m.to"
           class="flex items-center gap-3 px-3 py-2 rounded-md text-sm text-ink-600 cursor-not-allowed"
         >
@@ -84,21 +85,17 @@
 import { computed } from 'vue';
 import { useRoute } from 'vue-router';
 import { usePermissions } from '../composables/usePermissions';
+import { ADMIN_MENUS } from '../lib/menus';
 import AppIcon from './ui/AppIcon.vue';
 
-const { user, logout } = usePermissions();
+const { user, logout, can } = usePermissions();
 const route = useRoute();
 
-const allMenus = [
-  { to: '/admin/users', label: '用户管理', icon: 'users', perm: 'menu:admin-users', title: '用户管理' },
-  { to: '/admin/roles', label: '角色权限', icon: 'roles', perm: 'menu:admin-roles', title: '角色权限' },
-  { to: '/admin/groups', label: '资源组', icon: 'groups', perm: 'menu:admin-groups', title: '资源组', soon: true },
-  { to: '/admin/config', label: '系统设置', icon: 'config', perm: 'menu:admin-config', title: '系统设置', soon: true },
-];
-
-const menus = computed(() => allMenus);
+// 菜单按 menu:* 权限过滤：没有对应权限的用户看不到该菜单，
+// 避免"菜单点进去 403 白屏"（后端仍会鉴权，这里只做可见性收敛）。
+const menus = computed(() => ADMIN_MENUS.filter((m) => !m.perm || can(m.perm)));
 const initial = computed(() => (user.value?.name || user.value?.username || '?')[0]?.toUpperCase());
-const currentTitle = computed(() => allMenus.find((m) => m.to === route.path)?.title || '后台');
+const currentTitle = computed(() => ADMIN_MENUS.find((m) => m.to === route.path)?.title || '后台');
 
 function isActive(to) {
   return route.path === to;

@@ -82,6 +82,7 @@ import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { api, setToken } from '../lib/apiBase';
 import { usePermissions } from '../composables/usePermissions';
+import { firstVisibleMenu } from '../lib/menus';
 import AppIcon from '../components/ui/AppIcon.vue';
 import AppButton from '../components/ui/AppButton.vue';
 
@@ -90,7 +91,7 @@ const password = ref('');
 const error = ref('');
 const loading = ref(false);
 const router = useRouter();
-const { load } = usePermissions();
+const { load, can } = usePermissions();
 
 const features = ['RBAC 用户 / 角色 / 权限模型', '动态菜单 + 按钮级权限控制', 'SQLite 默认 · PostgreSQL 可选'];
 
@@ -108,7 +109,10 @@ async function login() {
     });
     setToken(data.token);
     await load();
-    router.push(data.adminEntry ? '/admin/users' : '/');
+    // 落地页：有可见后台菜单就进该菜单，否则落前端展示首页。
+    // 不能只看 adminEntry —— 它只表示"有后台身份"，不代表能进具体菜单。
+    const target = firstVisibleMenu(can);
+    router.push(target ? target.to : '/');
   } catch (e) {
     error.value = e.message;
   } finally {

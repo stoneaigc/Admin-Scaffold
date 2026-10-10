@@ -15,7 +15,7 @@
           <a class="hover:text-ink-900 cursor-pointer transition">文档</a>
         </nav>
         <div class="flex items-center gap-3">
-          <AppButton v-if="adminEntry" variant="secondary" size="sm" @click="goAdmin">进入后台</AppButton>
+          <AppButton v-if="adminMenu" variant="secondary" size="sm" @click="goAdmin">进入后台</AppButton>
           <button class="text-sm text-ink-500 hover:text-ink-900 transition" @click="logout">退出</button>
         </div>
       </div>
@@ -33,7 +33,7 @@
         </p>
         <div class="mt-8 flex items-center justify-center gap-3">
           <AppButton @click="browse">立即浏览</AppButton>
-          <AppButton v-if="adminEntry" variant="secondary" @click="goAdmin">管理后台</AppButton>
+          <AppButton v-if="adminMenu" variant="secondary" @click="goAdmin">管理后台</AppButton>
         </div>
       </div>
     </section>
@@ -64,16 +64,19 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { api } from '../lib/apiBase';
 import { usePermissions } from '../composables/usePermissions';
+import { firstVisibleMenu } from '../lib/menus';
 import AppIcon from '../components/ui/AppIcon.vue';
 import AppButton from '../components/ui/AppButton.vue';
 
-const { adminEntry, logout } = usePermissions();
+const { logout, can } = usePermissions();
 const router = useRouter();
 const resources = ref([]);
+// 与登录落地页同一套判断：只有真的有可见后台菜单才展示入口
+const adminMenu = computed(() => firstVisibleMenu(can));
 
 onMounted(async () => {
   try {
@@ -85,7 +88,8 @@ onMounted(async () => {
 });
 
 function goAdmin() {
-  router.push('/admin/users');
+  const m = adminMenu.value;
+  router.push(m ? m.to : '/');
 }
 function browse() {
   document.querySelector('section:last-of-type')?.scrollIntoView({ behavior: 'smooth' });
