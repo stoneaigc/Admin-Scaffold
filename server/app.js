@@ -4,8 +4,11 @@ const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
 const authRoutes = require('./routes/auth');
+// apiLimiter 之前只导出没挂载：所有接口裸奔，既挡不住扫描也不挡得住误用导致的打爆
+const { apiLimiter } = require('./auth');
 const rbacRoutes = require('./routes/rbac');
 const portalRoutes = require('./routes/portal');
+const settingsRoutes = require('./routes/settings');
 
 const app = express();
 app.use(cors());
@@ -31,8 +34,12 @@ if (servePortal) {
   );
 }
 
+app.use('/api', apiLimiter);
+
 app.use('/api/auth', authRoutes);
 app.use('/api/admin', rbacRoutes);
+// 系统设置同样挂在 /api/admin 下（与 rbac 共用前缀，各自用 requirePermission 守卫）
+app.use('/api/admin', settingsRoutes);
 app.use('/api', portalRoutes);
 
 // SPA 回退：非 /api 的 GET 一律返回 index.html（仅启用静态托管时）

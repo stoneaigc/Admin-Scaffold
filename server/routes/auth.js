@@ -1,10 +1,12 @@
 // server/routes/auth.js
 const router = require('express').Router();
 const bcrypt = require('bcryptjs');
-const { verifyUser, signPortalToken, signAdminToken } = require('../auth');
+const { verifyUser, signPortalToken, signAdminToken, loginLimiter } = require('../auth');
 const { getUserPermissions, hasAdminEntry } = require('../lib/permission');
 
-router.post('/login', async (req, res) => {
+// 登录必须限流：不限流就等于允许对任意账号无限次撞密码。
+// loginLimiter 之前只是导出而从未挂载，等于防暴力破解这道门没装。
+router.post('/login', loginLimiter, async (req, res) => {
   const { username, password } = req.body || {};
   if (!username || !password) return res.status(400).json({ error: '用户名和密码必填' });
   const r = await global.db.query('SELECT * FROM portal_users WHERE username = $1', [username]);

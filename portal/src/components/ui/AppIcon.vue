@@ -14,6 +14,10 @@
       <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
       <path d="M16 3.13a4 4 0 0 1 0 7.75" />
     </g>
+    <g v-else-if="name === 'user'">
+      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+      <circle cx="12" cy="7" r="4" />
+    </g>
     <g v-else-if="name === 'roles'">
       <path d="M12 2 3 7v6c0 5 3.5 8 9 9 5.5-1 9-4 9-9V7l-9-5Z" />
       <path d="m9 12 2 2 4-4" />
@@ -69,6 +73,93 @@
     <g v-else-if="name === 'arrow'">
       <path d="M5 12h14M13 6l6 6-6 6" />
     </g>
+
+    <!-- ===== 布局 / 主题（本次新增） ===== -->
+    <g v-else-if="name === 'panel-left'">
+      <rect x="3" y="3.5" width="18" height="17" rx="2.5" />
+      <path d="M9.5 3.5v17" />
+    </g>
+    <g v-else-if="name === 'sun'">
+      <circle cx="12" cy="12" r="4" />
+      <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" />
+    </g>
+    <g v-else-if="name === 'moon'">
+      <path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5Z" />
+    </g>
+    <g v-else-if="name === 'monitor'">
+      <rect x="2.5" y="4" width="19" height="12.5" rx="2" />
+      <path d="M8 20h8M12 16.5V20" />
+    </g>
+    <g v-else-if="name === 'palette'">
+      <path d="M12 3a9 9 0 1 0 0 18h1.6a2.4 2.4 0 0 0 0-4.8H12a1.8 1.8 0 0 1 0-3.6h4.2A4.8 4.8 0 0 0 21 7.8C21 5.1 17 3 12 3Z" />
+      <circle cx="7.8" cy="11.4" r="1.1" fill="currentColor" stroke="none" />
+      <circle cx="11" cy="7.8" r="1.1" fill="currentColor" stroke="none" />
+      <circle cx="15.6" cy="8.6" r="1.1" fill="currentColor" stroke="none" />
+    </g>
+    <g v-else-if="name === 'chevron-down'">
+      <path d="m6 9.5 6 6 6-6" />
+    </g>
+    <g v-else-if="name === 'chevron-left'">
+      <path d="m14.5 6-6 6 6 6" />
+    </g>
+    <g v-else-if="name === 'chevron-right'">
+      <path d="m9.5 6 6 6-6 6" />
+    </g>
+
+    <!-- ===== 系统设置（本次新增） ===== -->
+    <g v-else-if="name === 'building'">
+      <path d="M4 21V5.5a1.5 1.5 0 0 1 1.5-1.5h9A1.5 1.5 0 0 1 16 5.5V21" />
+      <path d="M16 10h2.5A1.5 1.5 0 0 1 20 11.5V21" />
+      <path d="M2.5 21h19" />
+      <path d="M7.5 8h1.5M7.5 12h1.5M7.5 16h1.5M11.5 8H13M11.5 12H13M11.5 16H13" />
+    </g>
+    <g v-else-if="name === 'mail'">
+      <rect x="2.5" y="5" width="19" height="14" rx="2.5" />
+      <path d="m3.5 7.5 8.5 5.5 8.5-5.5" />
+    </g>
+    <g v-else-if="name === 'globe'">
+      <circle cx="12" cy="12" r="9" />
+      <path d="M3.5 9.5h17M3.5 14.5h17" />
+      <path d="M12 3c2.4 2.4 3.6 5.4 3.6 9s-1.2 6.6-3.6 9c-2.4-2.4-3.6-5.4-3.6-9S9.6 5.4 12 3Z" />
+    </g>
+    <g v-else-if="name === 'key'">
+      <circle cx="8" cy="15" r="4" />
+      <path d="m11 12 8-8M17 4l3 3M15 6l3 3" />
+    </g>
+    <g v-else-if="name === 'shield'">
+      <path d="M12 2.5 4.5 6v6c0 4.6 3.2 7.4 7.5 8.5 4.3-1.1 7.5-3.9 7.5-8.5V6L12 2.5Z" />
+    </g>
+    <g v-else-if="name === 'image'">
+      <rect x="3" y="4" width="18" height="16" rx="2.5" />
+      <circle cx="8.5" cy="9.5" r="1.6" />
+      <path d="m4 17 4.5-4.5 3.5 3.5 3-2.5L20 17" />
+    </g>
+    <g v-else-if="name === 'upload'">
+      <path d="M12 16V4" />
+      <path d="m7.5 8.5 4.5-4.5 4.5 4.5" />
+      <path d="M4 16v2.5A1.5 1.5 0 0 0 5.5 20h13a1.5 1.5 0 0 0 1.5-1.5V16" />
+    </g>
+    <g v-else-if="name === 'refresh'">
+      <path d="M20.5 12a8.5 8.5 0 1 1-2.6-6.1" />
+      <path d="M20.5 4.5V10h-5.5" />
+    </g>
+    <g v-else-if="name === 'info'">
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 11v5.5M12 7.8v.4" />
+    </g>
+    <g v-else-if="name === 'external'">
+      <path d="M14 4h6v6" />
+      <path d="m20 4-8.5 8.5" />
+      <path d="M19 14.5v4a1.5 1.5 0 0 1-1.5 1.5h-12A1.5 1.5 0 0 1 4 18.5v-12A1.5 1.5 0 0 1 5.5 5h4" />
+    </g>
+    <g v-else-if="name === 'link'">
+      <path d="M10 13.5a3.5 3.5 0 0 0 5 0l3-3a3.54 3.54 0 0 0-5-5l-1 1" />
+      <path d="M14 10.5a3.5 3.5 0 0 0-5 0l-3 3a3.54 3.54 0 0 0 5 5l1-1" />
+    </g>
+    <g v-else-if="name === 'menu'">
+      <path d="M3.5 7h17M3.5 12h17M3.5 17h17" />
+    </g>
+
     <circle v-else cx="12" cy="12" r="9" />
   </svg>
 </template>

@@ -1,0 +1,20 @@
+{
+  "name": "admin-scaffold",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Admin + portal scaffold: 统一入口脚本（装依赖 → 建库 → 构建前端 → 启动）",
+  "scripts": {
+    "setup": "npm run install:server && npm run install:portal && npm run migrate && npm run build",
+    "install:server": "cd server && npm install",
+    "install:portal": "cd portal && npm install",
+    "migrate": "cd server && npm run migrate",
+    "build": "cd portal && npm run build",
+    "start": "cd server && npm start",
+    "dev:server": "cd server && npm run dev",
+    "dev:portal": "cd portal && npm run dev"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "license": "MIT"
+}

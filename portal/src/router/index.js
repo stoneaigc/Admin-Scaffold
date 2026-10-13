@@ -10,6 +10,12 @@ const routes = [
     children: [
       { path: 'users', component: () => import('../views/admin/UsersView.vue'), meta: { admin: true } },
       { path: 'roles', component: () => import('../views/admin/RolesView.vue'), meta: { admin: true } },
+      { path: 'groups', component: () => import('../views/admin/GroupsView.vue'), meta: { admin: true } },
+      {
+        path: 'settings',
+        component: () => import('../views/admin/SettingsView.vue'),
+        meta: { admin: true },
+      },
     ],
   },
   { path: '/:pathMatch(.*)*', redirect: '/' },

@@ -1,9 +1,23 @@
 node_modules/
 dist/
 .env
+.env.local
+.env.*.local
 *.log
 .DS_Store
 
+# Vite 偶发的临时配置文件（崩溃/中断残留），入库会造成构建配置冲突
+*.timestamp-*.mjs
+
+# Playwright 调试产物（截图 / traces）
+.playwright-cli/
+test-results/
+
 # SQLite 数据文件（默认库，不入库）
 server/data/
+
+# 验证脚本产出的截图（脚本本身入库，图片不入库）
+walkthrough/*.png
+walkthrough/*.txt
+walkthrough/theme-checks.json
 

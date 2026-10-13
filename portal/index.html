@@ -4,6 +4,24 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="开箱即用的后台管理脚手架：RBAC 权限内核 + Vue3 + Express + SQLite/PostgreSQL" />
+    <script>
+      // 防暗色首屏白闪：必须在样式表与模块脚本之前执行。
+      // 此处只做「把 html.dark 提前打上」这一件事，真实的主题状态由 composables/useTheme.js 接管。
+      (function () {
+        try {
+          var raw = localStorage.getItem('as_theme');
+          var state = raw ? JSON.parse(raw) : {};
+          var mode = state.mode || 'system';
+          var prefersDark =
+            window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+          if (mode === 'dark' || (mode === 'system' && prefersDark)) {
+            document.documentElement.classList.add('dark');
+          }
+        } catch (e) {
+          /* 忽略：读不到就用默认浅色 */
+        }
+      })();
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link

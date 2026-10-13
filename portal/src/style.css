@@ -2,8 +2,90 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ============================================================================
+   设计令牌（Design Tokens）
+   ----------------------------------------------------------------------------
+   所有颜色以「R G B 通道」形式存在 CSS 变量里，Tailwind 再用
+   rgb(var(--x) / <alpha-value>) 消费（见 tailwind.config.js）。
+
+   为什么这么做（而不是在类名上逐个写 dark:bg-xxx）：
+   1) 全站 145 处 ink-* 工具类，逐处加 dark: 变体既难维护又必然漏；
+      改成变量后，暗色模式只是「换一套变量值」，组件零改动自动翻转。
+   2) 强调色要能运行时切换。编译期写死的 hex 无法运行时替换，
+      变量 + JS 注入才能做到「点一下就换主题色」。
+
+   命名语义（改色时请按语义改，不要按色值改）：
+   - ink-50/100  → 次级底色 / 微弱填充
+   - ink-200/300 → 分隔线 / 强边框
+   - ink-400/500 → 最弱文字 / 次级文字
+   - ink-600~900 → 正文 → 主标题
+   ============================================================================ */
 :root {
-  color: #0f172a;
+  /* ---- 品牌 / 强调色（默认苹果蓝，运行时可被 useTheme 覆盖） ---- */
+  --brand-50: 232 241 254;
+  --brand-100: 210 230 254;
+  --brand-200: 181 212 244;
+  --brand-300: 150 197 246;
+  --brand-400: 55 138 221;
+  --brand-500: 0 113 227;
+  --brand-600: 0 102 204;
+  --brand-700: 0 91 180;
+  --brand-800: 0 74 159;
+
+  /* ---- 中性灰阶：浅色模式（浅底深字） ---- */
+  --ink-50: 251 251 253;
+  --ink-100: 245 245 247;
+  --ink-200: 232 232 237;
+  --ink-300: 210 210 215;
+  --ink-400: 134 134 139;
+  --ink-500: 110 110 115;
+  --ink-600: 81 81 84;
+  --ink-700: 66 66 69;
+  --ink-800: 29 29 31;
+  --ink-900: 29 29 31;
+
+  /* ---- 语义色 ---- */
+  --panel: 255 255 255; /* 卡片 / 模态 / 顶栏 */
+  --sidebar: 251 251 253; /* 侧栏底 */
+  --hairline: 210 210 215; /* 发丝边框 */
+  --canvas: 248 250 252; /* 页面画布 */
+  --scrim: 15 23 42; /* 遮罩（明暗都必须偏暗） */
+  --scrollbar: 203 213 225;
+  --scrollbar-hover: 148 163 184;
+
+  /* ---- 阴影 ---- */
+  --shadow-card: 0 1px 2px 0 rgb(15 23 42 / 0.04), 0 1px 3px 0 rgb(15 23 42 / 0.06);
+  --shadow-pop: 0 16px 48px -12px rgb(15 23 42 / 0.22);
+
+  color-scheme: light;
+}
+
+/* ---- 暗色模式：整条 ramp 反转（深底浅字） ---- */
+html.dark {
+  --ink-50: 19 19 22;
+  --ink-100: 35 35 39;
+  --ink-200: 47 47 53;
+  --ink-300: 70 70 78;
+  --ink-400: 142 142 150;
+  --ink-500: 158 158 168;
+  --ink-600: 184 184 192;
+  --ink-700: 207 207 214;
+  --ink-800: 232 232 238;
+  --ink-900: 245 245 247;
+
+  --panel: 28 28 31;
+  --sidebar: 24 24 27;
+  --hairline: 47 47 53;
+  --canvas: 19 19 22;
+  --scrim: 0 0 0;
+  --scrollbar: 63 63 70;
+  --scrollbar-hover: 82 82 91;
+
+  /* 浅阴影在暗底不可见，改用更深的投影来拉开层次 */
+  --shadow-card: 0 1px 2px 0 rgb(0 0 0 / 0.4), 0 1px 3px 0 rgb(0 0 0 / 0.3);
+  --shadow-pop: 0 16px 48px -12px rgb(0 0 0 / 0.6);
+
+  color-scheme: dark;
 }
 
 html,
@@ -13,9 +95,24 @@ body {
 }
 
 body {
-  background: #f8fafc;
+  background: rgb(var(--canvas));
+  color: rgb(var(--ink-900));
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+}
+
+/* 主题切换时的短暂过渡：避免颜色硬闪。
+   只在切换瞬间挂 .theme-transition，首屏加载不挂，避免拖慢首屏。 */
+html.theme-transition,
+html.theme-transition *,
+html.theme-transition *::before,
+html.theme-transition *::after {
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease,
+    fill 0.2s ease !important;
+  transition-delay: 0s !important;
 }
 
 /* 精致滚动条 */
@@ -24,11 +121,11 @@ body {
   height: 8px;
 }
 *::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: rgb(var(--scrollbar));
   border-radius: 9999px;
 }
 *::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: rgb(var(--scrollbar-hover));
 }
 *::-webkit-scrollbar-track {
   background: transparent;
@@ -52,6 +149,24 @@ textarea {
   color: inherit;
 }
 input::placeholder,
-select::placeholder {
-  color: #94a3b8;
+select::placeholder,
+textarea::placeholder {
+  color: rgb(var(--ink-400));
+}
+
+/* 键盘可达性：统一焦点环（鼠标点击不显示，键盘 Tab 才显示） */
+:focus-visible {
+  outline: 2px solid rgb(var(--brand-500) / 0.5);
+  outline-offset: 2px;
+}
+
+/* 尊重「减少动效」系统偏好 */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

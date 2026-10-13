@@ -1,0 +1,9 @@
+# 统一归一化：仓库内一律存 LF，检出时按各平台习惯转换。
+# 避免 Windows/Unix 混用导致整文件 diff，也避免 shell 脚本带 CRLF 在 Linux 上执行失败。
+* text=auto
+
+# 二进制 / 锁文件不做转换
+*.png binary
+*.jpg binary
+*.svg text
+package-lock.json -diff
