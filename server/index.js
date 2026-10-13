@@ -24,8 +24,8 @@ async function seedAdmin() {
 
 /**
  * 启动自检：把「能启动但显然不对」的状态在第一行日志就说清楚。
- * 全新 clone 后最常见的三件事：没 cp .env、前端没 build、还在用默认口令。
- * 这三条都不报错，但都会让人以为「项目坏了」，所以主动喊出来。
+ * 全新 clone 后最常见的四件事：没 cp .env、前端没 build、还在用示例口令、JWT 密钥还是示例值。
+ * 这四条都不报错，但都会让人以为「项目坏了」（或上线后出事），所以主动喊出来。
  */
 function preflight() {
   const envPath = path.join(__dirname, '.env');
@@ -42,6 +42,14 @@ function preflight() {
       '\n[preflight] 未找到 portal/dist —— 现在只能访问后端 API，浏览器打开会看到 {"error":"Not found"}。\n' +
         '           构建前端: cd portal && npm install && npm run build\n' +
         '           或直接开发模式: cd portal && npm run dev（访问 http://localhost:5173，已配好 /api 代理）\n'
+    );
+  }
+
+  const secret = process.env.JWT_SECRET || '';
+  if (secret === 'change-me-to-a-random-secret' || (secret && secret.length < 16)) {
+    console.warn(
+      '\n[preflight] 警告: JWT_SECRET 仍是示例值或过短，任何人都能伪造登录 token。\n' +
+        '           生成一个: openssl rand -hex 32（Windows 可用 node -e "console.log(require(\'crypto\').randomBytes(32).toString(\'hex\'))"）\n'
     );
   }
 
