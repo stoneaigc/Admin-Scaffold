@@ -11,7 +11,8 @@
 //
 // 占位符约定：业务 SQL 统一用 PostgreSQL 风格 $1/$2...；SQLite 端在 query 内自动转成 ?。
 //   ILIKE 在 SQLite 端自动降级为 LIKE（SQLite 的 LIKE 对 ASCII 默认大小写不敏感）。
-require('dotenv').config();
+// 与 index.js 同理：按 server/ 目录定位 .env，而不是按工作目录
+require('dotenv').config({ path: require('path').join(__dirname, '.env') });
 const fs = require('fs');
 const path = require('path');
 

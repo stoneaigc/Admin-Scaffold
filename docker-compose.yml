@@ -1,57 +1,67 @@
+# All-in-One 部署：一个容器搞定（后端 API + 前端页面，同一个端口）
+#
+#   1) cp .env.example .env        # 改掉里面的必填项
+#   2) docker compose up -d --build
+#   3) 浏览器打开 http://localhost:3000
+#
+# 切 PostgreSQL（可选，默认 SQLite 不用动）：
+#   根 .env 里设 DB_TYPE=postgres，然后
+#   docker compose --profile postgres up -d --build
+#
+# 注意：compose 读的是仓库根的 .env；本地 npm start 用的是 server/.env，两套分开不冲突。
 services:
-  server:
-    build: ./server
+  app:
+    build: .
+    image: admin-scaffold:latest
+    container_name: admin-scaffold
+    restart: unless-stopped
+    ports:
+      # 宿主端口可改：根 .env 里设 APP_PORT=8080 就是 8080:3000
+      - "${APP_PORT:-3000}:3000"
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+
+      # ---- 必填：用 :? 语法，没设直接拒绝启动，避免把示例密钥/弱口令带上线 ----
+      # ⚠️ 提示语里不要出现「冒号+空格」，会被 YAML 当成嵌套 mapping 直接解析失败
+      JWT_SECRET: "${JWT_SECRET:?缺少 JWT_SECRET，生成方式 openssl rand -hex 32}"
+      SEED_ADMIN_PASSWORD: "${SEED_ADMIN_PASSWORD:?缺少 SEED_ADMIN_PASSWORD，即初始管理员密码}"
+      SETTINGS_ENC_KEY: "${SETTINGS_ENC_KEY:?缺少 SETTINGS_ENC_KEY，即敏感配置的加密密钥}"
+
+      # ---- 可选 ----
+      SEED_ADMIN_USERNAME: ${SEED_ADMIN_USERNAME:-admin}
+      SEED_ADMIN_NAME: ${SEED_ADMIN_NAME:-超级管理员}
+      TOKEN_TTL: ${TOKEN_TTL:-86400}
+
+      # ---- 数据库：默认 SQLite 文件库，落在 app-data 卷 ----
+      DB_TYPE: ${DB_TYPE:-sqlite}
+      SQLITE_PATH: /app/server/data/app.db
+      PG_HOST: ${PG_HOST:-postgres}
+      PG_PORT: ${PG_PORT:-5432}
+      PG_USER: ${PG_USER:-postgres}
+      PG_PASSWORD: ${PG_PASSWORD:-postgres}
+      PG_DATABASE: ${PG_DATABASE:-admin_scaffold}
+    volumes:
+      # SQLite 库持久化：容器删了数据还在（docker compose down -v 才会清）
+      - app-data:/app/server/data
+
+  # 可选：只有 --profile postgres 时才启动
+  postgres:
+    image: postgres:16-alpine
+    profiles: ["postgres"]
     restart: unless-stopped
     environment:
-      PORT: 3000
-      # 默认 SQLite：开箱即跑，数据落在挂载卷 ./data/app.db
-      DB_TYPE: sqlite
-      SQLITE_PATH: /app/data/app.db
-      JWT_SECRET: ${JWT_SECRET:-change-me-to-a-random-secret}
-      TOKEN_TTL: ${TOKEN_TTL:-86400}
-      SEED_ADMIN_USERNAME: ${SEED_ADMIN_USERNAME:-admin}
-      SEED_ADMIN_PASSWORD: ${SEED_ADMIN_PASSWORD:-admin123456}
-      SEED_ADMIN_NAME: ${SEED_ADMIN_NAME:-超级管理员}
-    ports:
-      - "3000:3000"
+      POSTGRES_USER: ${PG_USER:-postgres}
+      POSTGRES_PASSWORD: ${PG_PASSWORD:-postgres}
+      POSTGRES_DB: ${PG_DATABASE:-admin_scaffold}
     volumes:
-      - ./data:/app/data          # SQLite 文件持久化
+      - pg-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD", "node", "-e", "require('http').get('http://127.0.0.1:3000/api/health',r=>process.exit(r.statusCode===200?0:1)).on('error',()=>process.exit(1))"]
-      interval: 30s
+      test: ["CMD-SHELL", "pg_isready -U ${PG_USER:-postgres} -d ${PG_DATABASE:-admin_scaffold}"]
+      interval: 10s
       timeout: 5s
-      retries: 3
-      start_period: 10s
+      retries: 5
 
-  # 前端：容器内 build 静态产物，用 nginx 托管并反代 /api 到 server。
-  # 只用后端 API 的话可以注释掉这一段。
-  frontend:
-    build: ./portal
-    restart: unless-stopped
-    depends_on:
-      - server
-    ports:
-      - "8080:80"
-
-  # ===== 生产可选：改用 PostgreSQL =====
-  # 取消注释下面两段，并把上面 server.environment 里的 DB_TYPE 改为 postgres、删掉 SQLITE_PATH。
-  # postgres:
-  #   image: postgres:16-alpine
-  #   restart: unless-stopped
-  #   environment:
-  #     POSTGRES_USER: ${PG_USER:-postgres}
-  #     POSTGRES_PASSWORD: ${PG_PASSWORD:-postgres}
-  #     POSTGRES_DB: ${PG_DATABASE:-admin_scaffold}
-  #   volumes:
-  #     - pgdata:/var/lib/postgresql/data
-  # server 的 environment 改为：
-  #   DB_TYPE: postgres
-  #   PG_HOST: postgres
-  #   PG_PORT: 5432
-  #   PG_USER: ${PG_USER:-postgres}
-  #   PG_PASSWORD: ${PG_PASSWORD:-postgres}
-  #   PG_DATABASE: ${PG_DATABASE:-admin_scaffold}
-  # 并给 server 加 depends_on: [postgres]
-
-# volumes:
-#   pgdata:
+volumes:
+  app-data:
+  pg-data:

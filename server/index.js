@@ -1,7 +1,10 @@
 // server/index.js
 const fs = require('fs');
 const path = require('path');
-require('dotenv').config();
+// 显式按 server/ 目录定位 .env：dotenv 默认按 process.cwd() 找，
+// 从仓库根执行 `node server/index.js` 会读不到 server/.env（表现为「缺少 JWT_SECRET」）。
+// 已存在的环境变量优先级更高，容器里用 environment 注入时不会冲突。
+require('dotenv').config({ path: path.join(__dirname, '.env') });
 require('./db'); // 初始化 global.db（统一驱动层）
 const app = require('./app');
 const { run } = require('./lib/migrator');

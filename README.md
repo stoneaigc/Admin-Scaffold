@@ -6,7 +6,7 @@
 - **鉴权中间件**：JWT 登录、`requirePermission(key)` 接口守卫、`optionalUser` 访客放行、登录/接口限流
 - **系统设置中心**：系统名 / Logo / 主题色 / 默认外观 / SMTP 邮件配置（全部落库，支持发测试邮件）
 - **前端骨架**：Apple 风浅色主题、明暗双模式、侧栏折叠、主题色切换（Vue3 + Vite + Tailwind，零 UI 库依赖）
-- **部署**：本地零依赖直跑（SQLite）或 `docker-compose` 一键起（server + nginx 前端）
+- **部署**：本地零依赖直跑（SQLite）或 Docker **All-in-One 单容器**一键起（后端 + 前端同端口）
 
 适合「企业内部资源自助平台 / 管理后台」这类项目：`clone` 下来，注册自己的资源类型，改皮即上线。
 
@@ -48,19 +48,56 @@ npm run dev:portal    # http://localhost:5173（页面，已配 /api 代理到 3
 
 改 `PORT` 后记得同步 `portal/vite.config.js` 里 `proxy['/api']` 的目标端口。
 
-## Docker
+## Docker（默认 All-in-One：一个容器搞定）
+
+单个镜像同时包含**后端 API + 前端静态资源**，一条命令起，一个端口访问。
 
 ```bash
-cp server/.env.example server/.env   # 改 JWT_SECRET / SEED_ADMIN_PASSWORD
-docker compose up -d --build
+cp .env.example .env                 # 改掉里面三个必填项（JWT_SECRET / SEED_ADMIN_PASSWORD / SETTINGS_ENC_KEY）
+docker compose up -d --build         # 首次会自动构建前端 + 建库建表 + 建初始管理员
+docker compose logs -f app           # 看启动日志（含自检告警）
 ```
 
-- 后端 API：http://localhost:3000
-- 前端页面：http://localhost:8080（容器内构建静态产物，nginx 反代 `/api` 到 server）
-- SQLite 数据落在仓库根的 `./data` 挂载卷
+打开 http://localhost:3000 ，用 `.env` 里的 `SEED_ADMIN_USERNAME` / `SEED_ADMIN_PASSWORD` 登录。
 
-> server 镜像用 `node:22-bookworm-slim` 而不是 alpine：`better-sqlite3` 只有 glibc 预编译包，
-> alpine(musl) 下要现场编译，缺构建工具链会直接构建失败。
+| 项目 | 说明 |
+| --- | --- |
+| 镜像内布局 | `/app/server`（后端源码）、`/app/portal/dist`（前端产物，后端同源托管）、`/app/server/data`（SQLite） |
+| 端口 | 容器内固定 3000；宿主端口用 `.env` 的 `APP_PORT` 改 |
+| 数据持久化 | 具名卷 `app-data` → `/app/server/data`，容器删了数据还在（`docker compose down -v` 才会清） |
+| 健康检查 | 每 30s 打 `/api/health`；`docker compose ps` 看 healthy/unhealthy |
+| 备份 | `docker run --rm -v <项目名>_app-data:/d -v %cd%:/b alpine tar czf /b/backup.tgz /d`（数据卷导出） |
+
+**单容器直跑**（不用 compose）：
+
+```bash
+docker build -t admin-scaffold .
+docker run -d --name admin-scaffold -p 3000:3000 \
+  -v admin-scaffold-data:/app/server/data \
+  -e JWT_SECRET=$(openssl rand -hex 32) \
+  -e SEED_ADMIN_PASSWORD='换成你的密码' \
+  -e SETTINGS_ENC_KEY=$(openssl rand -hex 32) \
+  admin-scaffold
+```
+
+### 切 PostgreSQL
+
+```bash
+# 根 .env 里改：DB_TYPE=postgres
+docker compose --profile postgres up -d --build     # 会额外起一个 postgres:16-alpine
+```
+
+> compose 读的是**仓库根**的 `.env`；本地 `npm start` 用的是 `server/.env`，两套互不干扰。
+
+### Docker 踩坑速查
+
+| 现象 | 原因 / 处理 |
+| --- | --- |
+| `npm ci` 阶段报 `better-sqlite3` 编译失败 | 基础镜像必须是 Debian 系（已用 `node:22-bookworm-slim`）。改 alpine 会因 musl 无预编译包而现场编译失败 |
+| 构建时下载 prebuilt 超时 | 构建机需能访问 GitHub Release；离线环境改在能联网的机器构建后 `docker save/load` |
+| 起不来，提示缺少 `JWT_SECRET` 等 | 根 `.env` 没建或没填；compose 用 `:?` 语法强制必填，报错信息会直接告诉你缺哪个 |
+| 页面能开但数据重启就丢 | 忘了挂载 `app-data` 卷，或用了 `docker compose down -v` |
+| 端口冲突 | 改 `.env` 的 `APP_PORT`（改的是宿主端口，容器内仍是 3000） |
 
 ## 切 PostgreSQL（生产）
 
@@ -73,7 +110,7 @@ PG_USER=postgres
 PG_PASSWORD=postgres
 PG_DATABASE=admin_scaffold
 # 然后照常：npm run migrate && npm start
-# docker 方式见 docker-compose.yml 内注释段（取消注释 postgres 服务并改 server 环境变量）
+# docker 方式：根 .env 设 DB_TYPE=postgres，然后 docker compose --profile postgres up -d --build
 ```
 
 迁移 SQL 按方言分目录（`migrations/sqlite`、`migrations/pg`），`DB_TYPE` 决定跑哪一套；业务 SQL 统一写 `$1` 占位符，SQLite 侧自动转换。
@@ -94,6 +131,11 @@ PG_DATABASE=admin_scaffold
 ```
 .
 ├── package.json               # 统一入口脚本（setup / start / dev:server / dev:portal）
+├── Dockerfile                 # ★ All-in-One 镜像：前端构建 + 后端运行时，单容器单端口
+├── docker-compose.yml         # 默认单服务 all-in-one；--profile postgres 切 PG
+├── .dockerignore              # 构建上下文瘦身（排除 node_modules / data / .env）
+├── .env.example               # 容器部署用（放仓库根，compose 读它）
+├── .nvmrc                     # Node 22
 ├── server/                    # Express 后端（RBAC 内核，SQLite/PostgreSQL 双方言）
 │   ├── index.js               # 启动：自检 + 自动迁移 + 建初始管理员 + 监听
 │   ├── app.js                 # 路由挂载 + 同源托管 portal/dist + SPA 回退
@@ -115,7 +157,6 @@ PG_DATABASE=admin_scaffold
 │   ├── src/views              # Home(资源广场) / Login / admin(Users·Roles·Groups·Settings)
 │   ├── src/composables        # useTheme(主题色) / useBrand(品牌) / useSidebar / usePermissions / useAsync
 │   └── dist/                  # 构建产物（不入库，由 npm run build 产出）
-└── docker-compose.yml         # server(3000) + frontend-nginx(8080)
 ```
 
 ## 怎么改成自己的项目
