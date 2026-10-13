@@ -144,7 +144,7 @@ PG_DATABASE=admin_scaffold
 
 ## 上线前检查清单
 
-- [ ] 改 `.env`：`JWT_SECRET`（`openssl rand -hex 32`）、`SEED_ADMIN_PASSWORD`
+- [ ] 改 `.env`：`JWT_SECRET`（`openssl rand -hex 32`）、`SEED_ADMIN_PASSWORD`、`SETTINGS_ENC_KEY`
 - [ ] `NODE_ENV=production`，按需收紧 `app.js` 里的 `cors()`（当前是全放开）
 - [ ] 后台「系统设置 → 邮件配置」填好 SMTP 并点「发送测试邮件」验证
 - [ ] 生产建议 `DB_TYPE=postgres`；继续用 SQLite 的话备份 `server/data/app.db`
